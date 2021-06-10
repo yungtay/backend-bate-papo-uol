@@ -19,7 +19,7 @@ app.post("/participants", (req, res) => {
   }
   participants.push({ name: req.body.name, lastStatus: Date.now() });
   messages.push({
-    from: "xxx",
+    from: req.body.name,
     to: "Todos",
     text: "entra na sala...",
     type: "status",
@@ -71,5 +71,13 @@ app.post("/status", (req, res) => {
   res.sendStatus(200)
 });
 
+setInterval(() => {
+  participants.forEach((participant, index) => {
+    if (Date.now() - participant.lastStatus > 10000) {
+      participants.splice(index, 1);
+      messages.push({from: participant.name, to: 'Todos', text: 'sai da sala...', type: 'status', time: dayjs(Date.now()).format("HH:mm:ss")})
+    }
+  }); console.log(participants)
+}, 15000);
 
 app.listen(4000, () => console.log("Server Online"));
