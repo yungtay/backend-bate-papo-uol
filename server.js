@@ -24,15 +24,30 @@ app.post("/participants", (req, res) => {
     type: "status",
     time: dayjs(Date.now()).format("HH-mm-ss"),
   });
-  console.log(participants)
   res.sendStatus(200);
+  console.log(messages)
 });
 
 app.get("/participants", (req, res) => {
-    console.log(participants)
-  res.send(JSON.stringify(participants));
+  res.send(participants);
 });
 
+app.post("/messages", (req, res) => {
+  if (
+    !req.body.to ||
+    !req.body.text ||
+    !(req.body.type === "message" || req.body.type === "private_message") ||
+    !participants.find((participant) => participant.name === req.header("User"))
+  ) {
+    return res.sendStatus(400);
+  }
+  messages.push({
+    ...req.body,
+    from: req.header("User"),
+    time: dayjs(Date.now()).format("HH-mm-ss"),
+  });
+  res.sendStatus(200);
+});
 
 
 app.listen(4000, () => console.log("Server Online"));
