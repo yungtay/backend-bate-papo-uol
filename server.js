@@ -7,7 +7,8 @@ app.use(express.json());
 app.use(cors());
 
 const participants = [{name: 'João', lastStatus: 12313123}];
-const messages = [{from: 'João', to: 'Todos', text: 'oi galera', type: 'message', time: '20:04:37'}];
+const messages = [{from: 'teste', to: 'Todos', text: 'teste', type: 'message', time: '20:04:37'}];
+
 
 app.post("/participants", (req, res) => {
   if (
@@ -22,10 +23,9 @@ app.post("/participants", (req, res) => {
     to: "Todos",
     text: "entra na sala...",
     type: "status",
-    time: dayjs(Date.now()).format("HH-mm-ss"),
+    time: dayjs(Date.now()).format("HH:mm:ss"),
   });
   res.sendStatus(200);
-  console.log(messages)
 });
 
 app.get("/participants", (req, res) => {
@@ -44,10 +44,16 @@ app.post("/messages", (req, res) => {
   messages.push({
     ...req.body,
     from: req.header("User"),
-    time: dayjs(Date.now()).format("HH-mm-ss"),
+    time: dayjs(Date.now()).format("HH:mm:ss"),
   });
   res.sendStatus(200);
 });
+
+app.get("/messages", (req, res) => {
+    const limit = req.query.limit
+    const messagesToTheUser = messages.filter((m) => m.to === "Todos" || m.to === req.header("User") || m.from === req.header("User"))
+    res.send(messagesToTheUser.slice(-limit))
+  });
 
 
 app.listen(4000, () => console.log("Server Online"));
