@@ -50,10 +50,26 @@ app.post("/messages", (req, res) => {
 });
 
 app.get("/messages", (req, res) => {
-    const limit = req.query.limit
-    const messagesToTheUser = messages.filter((m) => m.to === "Todos" || m.to === req.header("User") || m.from === req.header("User"))
-    res.send(messagesToTheUser.slice(-limit))
-  });
+  const limit = req.query.limit;
+  const messagesToTheUser = messages.filter(
+    (m) =>
+      m.to === "Todos" ||
+      m.to === req.header("User") ||
+      m.from === req.header("User")
+  );
+  res.send(messagesToTheUser.slice(-limit));
+});
+
+app.post("/status", (req, res) => {
+  const participantHere = participants.find(
+    (participant) => participant.name === req.header("User")
+  );
+  if (!participantHere) {
+    return res.sendStatus(400);
+  }
+  participantHere.lastStatus = Date.now();
+  res.sendStatus(200)
+});
 
 
 app.listen(4000, () => console.log("Server Online"));
