@@ -2,22 +2,23 @@ import express from "express";
 import cors from "cors";
 import dayjs from "dayjs";
 import { stripHtml } from "string-strip-html";
-import Joi from 'joi';
+import Joi from "joi";
+import fs from "fs";
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-const participants = [{ name: "João", lastStatus: 12313123 }];
-const messages = [
-  {
-    from: "teste",
-    to: "Todos",
-    text: "teste",
-    type: "message",
-    time: "20:04:37",
-  },
-];
+let participants = [];
+let messages = [];
+
+if (fs.existsSync("./participants.txt")) {
+  participants = JSON.parse(fs.readFileSync("./participants.txt"));
+}
+
+if (fs.existsSync("./messages.txt")) {
+  messages = JSON.parse(fs.readFileSync("./messages.txt"));
+}
 
 app.post("/participants", (req, res) => {
   req.body.name = removeHtml(req.body.name);
@@ -39,6 +40,8 @@ app.post("/participants", (req, res) => {
     type: "status",
     time: dayjs(Date.now()).format("HH:mm:ss"),
   });
+  fs.writeFileSync("./participants.txt", JSON.stringify(participants));
+  fs.writeFileSync("./messages.txt", JSON.stringify(messages));
   res.sendStatus(200);
 });
 
@@ -54,7 +57,7 @@ app.post("/messages", (req, res) => {
   const schemaBody = Joi.object({
     to: Joi.string().min(1).required(),
     text: Joi.string().min(1).required(),
-    type: Joi.any().valid('message', 'private_message').required(),
+    type: Joi.any().valid("message", "private_message").required(),
   });
   const schemaHeaders = Joi.string().min(1).required();
   const errorBody = schemaBody.validate(req.body);
@@ -72,6 +75,7 @@ app.post("/messages", (req, res) => {
     from: nameUser,
     time: dayjs(Date.now()).format("HH:mm:ss"),
   });
+  fs.writeFileSync("./messages.txt", JSON.stringify(messages));
   res.sendStatus(200);
 });
 
@@ -87,7 +91,7 @@ app.get("/messages", (req, res) => {
 });
 
 app.post("/status", (req, res) => {
-  const nameUser = (stripHtml(`${req.header("User")}`).result).trim();
+  const nameUser = stripHtml(`${req.header("User")}`).result.trim();
   const participantHere = participants.find(
     (participant) => participant.name === nameUser
   );
@@ -109,12 +113,14 @@ setInterval(() => {
         type: "status",
         time: dayjs(Date.now()).format("HH:mm:ss"),
       });
+      fs.writeFileSync("./participants.txt", JSON.stringify(participants));
+      fs.writeFileSync("./messages.txt", JSON.stringify(messages));
     }
   });
 }, 15000);
 
 function removeHtml(html) {
-  return stripHtml(`${html}`).result.trim()
+  return stripHtml(`${html}`).result.trim();
 }
 
 app.listen(4000, () => console.log("Server Online"));
